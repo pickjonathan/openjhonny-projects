@@ -1,0 +1,37 @@
+{
+  "lenders": [
+    {
+      "companyId": "BANK_A",
+      "companyName": "Bank Alpha",
+      "minAmount": 5000,
+      "maxAmount": 60000,
+      "minTerm": 12,
+      "maxTerm": 84,
+      "minAprPct": 5.0,
+      "maxAprPct": 13.0,
+      "minCreditScore": 640
+    },
+    {
+      "companyId": "BANK_B",
+      "companyName": "Bank Beta",
+      "minAmount": 10000,
+      "maxAmount": 120000,
+      "minTerm": 24,
+      "maxTerm": 96,
+      "minAprPct": 4.5,
+      "maxAprPct": 11.5,
+      "minCreditScore": 680
+    },
+    {
+      "companyId": "FINTECH_C",
+      "companyName": "Fintech Capital",
+      "minAmount": 3000,
+      "maxAmount": 40000,
+      "minTerm": 6,
+      "maxTerm": 48,
+      "minAprPct": 7.0,
+      "maxAprPct": 18.0,
+      "minCreditScore": 600
+    }
+  ]
+}
