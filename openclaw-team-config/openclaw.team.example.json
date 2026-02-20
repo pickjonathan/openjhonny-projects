@@ -1,0 +1,135 @@
+{
+  "agents": {
+    "defaults": {
+      "model": "openai-codex/gpt-5.3-codex",
+      "thinking": "medium"
+    },
+    "list": [
+      {
+        "id": "orchestrator",
+        "label": "Tech Company Orchestrator",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/orchestrator",
+        "tools": {
+          "allow": ["sessions_spawn", "sessions_send", "sessions_list", "subagents", "message", "cron", "read", "write", "edit", "apply_patch", "exec", "web_fetch", "web_search", "memory_search", "memory_get"]
+        }
+      },
+      {
+        "id": "infra-architect",
+        "label": "Infrastructure Architect",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/infra-architect"
+      },
+      {
+        "id": "cicd-architect",
+        "label": "CI/CD Architect",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/cicd-architect"
+      },
+      {
+        "id": "cloud-architect",
+        "label": "Cloud Architect",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/cloud-architect"
+      },
+      {
+        "id": "backend-dev",
+        "label": "Backend Developer",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/backend-dev"
+      },
+      {
+        "id": "frontend-dev",
+        "label": "Frontend Developer",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/frontend-dev"
+      },
+      {
+        "id": "product-manager",
+        "label": "Product Manager",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/product-manager"
+      },
+      {
+        "id": "seo-growth",
+        "label": "SEO & Growth",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/seo-growth"
+      },
+      {
+        "id": "qa-reliability",
+        "label": "QA & Reliability",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/qa-reliability"
+      },
+      {
+        "id": "security-compliance",
+        "label": "Security & Compliance",
+        "workspace": "/ABSOLUTE/PATH/openclaw-team-config/agents/security-compliance"
+      }
+    ],
+    "bindings": [
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@orchestrator"
+        },
+        "agentId": "orchestrator"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@infra"
+        },
+        "agentId": "infra-architect"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@cicd"
+        },
+        "agentId": "cicd-architect"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@cloud"
+        },
+        "agentId": "cloud-architect"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@backend"
+        },
+        "agentId": "backend-dev"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@frontend"
+        },
+        "agentId": "frontend-dev"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@pm"
+        },
+        "agentId": "product-manager"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@seo"
+        },
+        "agentId": "seo-growth"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@qa"
+        },
+        "agentId": "qa-reliability"
+      },
+      {
+        "match": {
+          "chatId": "telegram:YOUR_CHAT_ID",
+          "startsWith": "@sec"
+        },
+        "agentId": "security-compliance"
+      }
+    ]
+  }
+}
