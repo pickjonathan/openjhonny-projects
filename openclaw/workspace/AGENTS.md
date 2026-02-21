@@ -1,320 +1,714 @@
-# AGENTS.md — OpenClaw Workspace Operating Manual
+# OpenClaw Agent — Repo-Wide Operating Manual
 
-## 1. Purpose
-You are an autonomous OpenClaw agent operating inside a Dockerized Linux environment.
-Your primary duty is to execute requests end-to-end with minimal, correct changes that match project conventions.
-You should inspect the current state, implement changes, install missing dependencies, run code, run tests, and fix issues until working output is verified.
-You should use available tools directly and avoid pushing routine execution work back to the user.
-You should prioritize safety, privacy, and auditability throughout all tasks.
+> **Purpose**: You are an autonomous OpenClaw agent operating inside a Dockerized Linux
+> environment. Your duty is to execute requests end-to-end with minimal, correct changes
+> that match project conventions. Inspect state, implement changes, install deps, run code,
+> run tests, and fix issues until working output is verified. Use tools directly — never
+> push routine execution work back to the user. Prioritize safety, privacy, and auditability.
 
-Environment facts:
-- Workspace root: `/home/node/.openclaw/workspace`
-- Runtime OS: Linux container (Docker)
-- Node.js: `v22.22.0`
-- Python: `python3` with venv at `/home/node/venv`
-- OpenClaw config file: `/home/node/.openclaw/openclaw.json`
-- OpenClaw docs baseline referenced by this workspace: `2026.2.20`
-- Config metadata currently seen in runtime: `lastTouchedVersion: 2026.2.16`
-- Primary model: `openai-codex/gpt-5.3-codex`
-- Fallback models: `openai/o3-mini`, `openai/gpt-4o`
-- Browser binary: `/usr/bin/chromium`
+---
 
-## 2. Quick commands (install / dev / lint / test / build)
-### Package install
-- Python package: `pip install <package>`
-- Node package: `npm install <package>`
-- System package: `sudo apt-get install -y <package>`
+## 1. Quick Commands
 
-### Run code
-- Run Python file: `python3 /home/node/.openclaw/workspace/<file>.py`
-- Run Node file: `node /home/node/.openclaw/workspace/<file>.js`
+### Tool Reference (exact syntax)
 
-### Lint, test, build
-- JS lint: `npm run lint`
-- JS tests: `npm test`
-- JS build: `npm run build`
-- Python tests: `pytest -q`
+| Tool | Syntax | Purpose |
+|------|--------|---------|
+| `exec` | `exec(command="<cmd>", background=false, timeout=30000)` | Run a shell command. Use `background:true` for long tasks. |
+| `bash` | `bash(command="<cmd>")` | Alias for exec in interactive contexts. |
+| `web_fetch` | `web_fetch(url="<url>", method="GET", headers={})` | HTTP request to any URL. No API key needed. |
+| `web_search` | `web_search(query="<query>", count=5)` | Brave-powered search. Requires `BRAVE_API_KEY`. |
+| `browser` | `browser(action="navigate", url="<url>")` | Headless Chromium automation. Actions: navigate, click, type, screenshot, evaluate, scroll, wait. |
+| `cron` | `cron(action="set", expression="*/5 * * * *", task="<prompt>")` | Schedule recurring jobs. Actions: set, list, delete. |
+| `message` | `message(action="send", channel="telegram", text="<msg>")` | Send proactive messages via Telegram/WhatsApp. |
+| `image` | `image(action="generate", prompt="<desc>", size="1024x1024")` | Generate images via configured provider. |
+| `sessions_spawn` | `sessions_spawn(prompt="<task>", model="<model>")` | Spawn a sub-agent for parallel/complex work. |
+| `gateway` | `gateway(action="status")` | Manage the OpenClaw gateway. Actions: status, start, stop, restart, config. |
+| `nodes` | `nodes(action="list")` | Inspect cluster node status. Actions: list, info, health. |
 
-### OpenClaw and gateway
-- Status: `openclaw status`
-- Gateway status: `openclaw gateway status`
-- Gateway start: `openclaw gateway start`
-- Gateway stop: `openclaw gateway stop`
-- Gateway restart: `openclaw gateway restart`
-- Health (from source tree): `node dist/index.js health`
-- Models (from source tree): `node dist/index.js models`
-- General help: `openclaw help`
-- Gateway help: `openclaw gateway --help`
+### Package Installation
 
-### Tool operations
-- Long command in background: use `exec` with `background:true`
-- Poll background process: use `process(action="poll", timeout=<ms>)`
-- Avoid rapid polling loops; use sensible timeouts.
+```bash
+# Python
+pip install <package>                    # Inside venv
+/home/node/venv/bin/pip install <package>  # Explicit venv path
 
-## 3. Project map (directories and entrypoints)
-- `/home/node/.openclaw/workspace/AGENTS.md`
-- `/home/node/.openclaw/workspace/SOUL.md`
-- `/home/node/.openclaw/workspace/USER.md`
-- `/home/node/.openclaw/workspace/IDENTITY.md`
-- `/home/node/.openclaw/workspace/TOOLS.md`
-- `/home/node/.openclaw/workspace/HEARTBEAT.md`
-- `/home/node/.openclaw/workspace/BOOTSTRAP.md`
-- `/home/node/.openclaw/workspace/MEMORY.md`
-- `/home/node/.openclaw/workspace/memory/`
-- `/home/node/.openclaw/workspace/agent_marketplace_poc/`
-- `/home/node/.openclaw/workspace/agent_marketplace_poc/v2/`
-- `/home/node/.openclaw/workspace/investment_strategy/`
-- `/home/node/.openclaw/workspace/investment_app/`
-- `/home/node/.openclaw/workspace/stock-price-app/`
-- `/home/node/.openclaw/workspace/openclaw-team-config/`
-- `/home/node/.openclaw/openclaw.json`
-- `/home/node/.openclaw/agents/main/agent/auth-profiles.json`
-- `/home/node/.openclaw/restart-sentinel.json`
+# Node.js
+npm install <package>
 
-Common entrypoints:
-- `agent_marketplace_poc/v2/server_v21.js`
-- `agent_marketplace_poc/v2/marketplace_v2.js`
-- `investment_strategy/strategy.js`
-- `openclaw-team-config/openclaw.team.example.json`
+# System
+sudo apt-get update && sudo apt-get install -y <package>
+```
 
-## 4. Tech stack
-- OS/runtime: Linux in Docker
-- JavaScript runtime: Node.js v22.22.0
-- Python runtime: Python 3 via `python3` and `/home/node/venv`
-- OpenClaw version family: 2026.2.x
-- Docs baseline target: 2026.2.20
-- Current config metadata touch version: 2026.2.16
-- Primary model: openai-codex/gpt-5.3-codex
-- Fallback models: openai/o3-mini, openai/gpt-4o
-- Browser automation: Chromium headless via browser tool
-- Web fetch: `web_fetch` (no API key)
-- Search: `web_search` (Brave key needed)
-- Messaging: Telegram configured in gateway; channel can route via WhatsApp depending on context
-- Orchestration: `sessions_spawn`, `subagents`, `sessions_send`, `sessions_list`
-- Scheduling: `cron` tool for reminders/jobs
+### Run Code
 
-## 5. Standards (DO / DON'T)
-### DO
-- Complete the full loop: write → install deps → run → debug → rerun → verify.
-- Keep edits minimal, focused, and consistent with existing style.
-- Run changed code path at least once before claiming completion.
-- Run relevant tests whenever available.
-- Install missing dependencies directly when safe.
-- Document outcomes and evidence in final report.
-- Keep memory files up to date when continuity matters.
-- Prefer deterministic validation for structured outputs.
-- Use role-appropriate tools directly rather than suggesting manual steps.
-- Preserve privacy and redact sensitive details in outputs.
-- Provide concrete commands and outputs when reporting.
-- Handle errors explicitly and close the loop before stopping.
+```bash
+python3 /home/node/.openclaw/workspace/<file>.py
+node /home/node/.openclaw/workspace/<file>.js
+```
 
-### DON'T
-- Do not say “you could try” when you can execute directly.
-- Do not report success without runtime evidence.
-- Do not commit secrets, tokens, private keys, or auth dumps.
-- Do not run destructive operations without explicit user confirmation.
-- Do not make broad unrelated refactors during focused tasks.
-- Do not bypass safety and policy constraints.
-- Do not leak private memory details in shared contexts.
-- Do not ignore lint/test failures silently.
-- Do not fabricate outputs or statuses.
-- Do not disable security checks to force completion.
-- Do not exfiltrate workspace/private data.
-- Do not stop mid-task for avoidable, low-risk steps you can execute yourself.
+### Lint, Test, Build
 
-### Self-healing rules
-- Missing dependency: install and rerun immediately.
-- Syntax error: fix code and rerun same command.
-- Runtime exception: capture stack trace, patch root cause, rerun tests.
-- API 429/rate limit: backoff and try alternate source/tool.
-- Browser timeout: retry with smaller steps or fallback to web_fetch.
-- Missing Brave key: use web_fetch/browser workflow instead of web_search.
-- Git auth errors: verify `gh auth status` and remote permissions.
-- Gateway config patch error: check schema with `config.schema` and patch minimally.
-- Port in use: identify conflict, stop offending process or switch to safe port.
-- Intermittent flaky test: isolate cause, stabilize test, rerun full impacted suite.
+```bash
+# JavaScript
+npm run lint          # ESLint
+npm test              # Jest / Mocha (project-dependent)
+npm run build         # Compile / bundle
 
-## 6. Golden examples (real file references)
-- `agent_marketplace_poc/v2/marketplace_v2.js` (event-driven orchestration + policy checks)
-- `agent_marketplace_poc/v2/server_v21.js` (API + SSE pattern)
-- `agent_marketplace_poc/v2/policies/lenders.json` (policy modeling)
-- `openclaw-team-config/openclaw.team.example.json` (team configuration baseline)
-- `agent_marketplace_poc/CLOUD_CODE.md` (handoff style)
-- `investment_strategy/GITHUB_COPILOT.md` (developer-oriented project guidance)
+# Python
+pytest -q             # Quick test run
+python3 -m pytest -v  # Verbose
+flake8 .              # Lint
+```
 
-## 7. Legacy / avoid copying
-- Avoid speculative trading configs that fail robustness gates.
-- Avoid one-off scripts with no tests, no docs, and no reproducibility.
-- Avoid temporary hacks with machine-local paths and hidden assumptions.
-- Avoid old snippets containing hardcoded credentials or tokens.
-- Avoid stale config patterns that do not match current OpenClaw schema.
+### OpenClaw CLI
 
-## 8. Testing rules
-- Always execute at least one changed path manually.
-- Use `npm test` for Node projects where available.
-- Use `pytest -q` for Python projects where available.
-- Validate both happy path and one error path for APIs.
-- Add regression tests for bug fixes when feasible.
-- Keep tests deterministic and avoid unstable timing assumptions.
-- Mock external unstable dependencies in unit tests.
-- Keep critical integration boundaries tested with realistic conditions.
-- Do not mark done if critical changed tests are failing.
-- Include test command/output evidence in the summary.
+```bash
+openclaw status              # Agent and system status
+openclaw help                # Full help
+openclaw gateway status      # Gateway health
+openclaw gateway start       # Start gateway
+openclaw gateway stop        # Stop gateway
+openclaw gateway restart     # Restart gateway
+openclaw gateway --help      # Gateway subcommands
+node dist/index.js health    # Health from source tree
+node dist/index.js models    # List available models
+```
 
-## 9. PR / commit workflow + definition of done
-- [1] Understand request, constraints, and current code state.
-- [2] Implement focused change set only.
-- [3] Run relevant commands/tests and fix issues.
-- [4] Update docs if behavior, setup, or usage changed.
-- [5] Stage and commit only relevant files with clear message.
-- [6] Push when requested.
-- [7] Report concise verified outcome with evidence.
+### Background Processes
 
-Definition of done:
-- Requested behavior implemented and verified.
-- Relevant tests/checks pass or are clearly explained.
-- No secrets added.
-- Documentation aligned with behavior.
+```bash
+exec(command="node server.js", background=true)   # Start in background
+process(action="poll", timeout=5000)               # Check output
+process(action="kill", pid=<pid>)                  # Terminate
+```
+
+> **Rule**: Avoid rapid polling loops. Use sensible timeouts (5-10s minimum).
+
+---
+
+## 2. Project Map
+
+### Workspace Layout
+
+```
+/home/node/.openclaw/
+  workspace/                          # <-- YOUR WORKING DIRECTORY
+    AGENTS.md                         # This file - main operating manual
+    SOUL.md                           # Agent personality and interaction style
+    USER.md                           # User preferences and context
+    IDENTITY.md                       # Agent identity configuration
+    TOOLS.md                          # Extended tool documentation
+    HEARTBEAT.md                      # Periodic task instructions (read exactly)
+    BOOTSTRAP.md                      # First-boot initialization steps
+    MEMORY.md                         # Long-term curated context
+    memory/                           # Daily session logs
+      YYYY-MM-DD.md                   # One file per day
+    agent_marketplace_poc/            # Marketplace proof-of-concept
+      v2/
+        server_v21.js                 # API + SSE streaming server
+        marketplace_v2.js             # Event-driven orchestration
+        policies/
+          lenders.json                # Policy modeling example
+      CLOUD_CODE.md                   # Handoff documentation style
+    investment_strategy/              # Investment analysis project
+      strategy.js                     # Strategy entrypoint
+      GITHUB_COPILOT.md              # Developer guidance doc
+    investment_app/                   # Investment application
+    stock-price-app/                  # Stock price tracker
+    openclaw-team-config/             # Team configuration
+      openclaw.team.example.json      # Team config baseline
+  openclaw.json                       # Main OpenClaw configuration
+  agents/main/agent/
+    auth-profiles.json                # Authentication profiles
+  restart-sentinel.json               # Restart detection file
+```
+
+### Specialist Agent Files
+
+Each specialist has their own `<role>-AGENTS.md` in the workspace root:
+
+| File | Role | When to Delegate |
+|------|------|-----------------|
+| `orchestrator-AGENTS.md` | Orchestrator | Multi-agent coordination, complex workflows |
+| `infra-architect-AGENTS.md` | Infra Architect | Docker, Kubernetes, infrastructure design |
+| `cicd-architect-AGENTS.md` | CI/CD Architect | Pipelines, GitHub Actions, deployment automation |
+| `cloud-architect-AGENTS.md` | Cloud Architect | AWS/GCP/Azure, cloud services, scaling |
+| `backend-dev-AGENTS.md` | Backend Dev | APIs, databases, server logic, Node.js/Python |
+| `frontend-dev-AGENTS.md` | Frontend Dev | React, UI/UX, browser rendering, CSS |
+| `product-manager-AGENTS.md` | Product Manager | Specs, priorities, user stories, roadmap |
+| `seo-growth-AGENTS.md` | SEO & Growth | SEO, analytics, marketing, content strategy |
+| `qa-reliability-AGENTS.md` | QA & Reliability | Testing strategy, load testing, monitoring |
+| `security-compliance-AGENTS.md` | Security & Compliance | Auth, encryption, compliance, vulnerability assessment |
+
+---
+
+## 3. Tech Stack
+
+| Layer | Technology | Details |
+|-------|-----------|---------|
+| **OS** | Linux (Docker) | Containerized environment |
+| **Node.js** | v22.22.0 | Primary JS runtime |
+| **Python** | python3 | Venv at `/home/node/venv` |
+| **OpenClaw** | 2026.2.x | Docs baseline: 2026.2.20, config touch: 2026.2.16 |
+| **Primary Model** | openai-codex/gpt-5.3-codex | Default for all tasks |
+| **Fallback Models** | openai/o3-mini, openai/gpt-4o | When primary is unavailable |
+| **Browser** | Chromium headless | Binary: `/usr/bin/chromium` |
+| **Web Fetch** | `web_fetch` | No API key required |
+| **Search** | `web_search` | Brave API key required |
+| **Messaging** | Telegram (primary), WhatsApp (fallback) | Gateway-routed |
+| **Orchestration** | `sessions_spawn`, `subagents`, `sessions_send`, `sessions_list` | Multi-agent coordination |
+| **Scheduling** | `cron` tool | Reminders, periodic jobs |
+| **Config** | `/home/node/.openclaw/openclaw.json` | Gateway and model config |
+
+---
+
+## 4. Standards
+
+### Always Do
+
+1. **Complete the full loop**: write -> install deps -> run -> debug -> rerun -> verify.
+2. **Run changed code** at least once before claiming completion.
+3. **Run relevant tests** whenever a test suite exists.
+4. **Install missing deps** directly — do not ask the user to do it.
+5. **Provide concrete evidence**: include command output, test results, or screenshots.
+6. **Keep edits minimal** and consistent with existing project style.
+7. **Handle errors explicitly** — capture stack traces, patch root cause, rerun.
+8. **Update memory files** when continuity matters for future sessions.
+9. **Preserve privacy** — redact sensitive details in all outputs.
+10. **Validate structured outputs** deterministically (JSON schema, type checks).
+
+### Never Do
+
+1. **Never say "you could try"** when you can execute directly.
+2. **Never report success** without runtime evidence.
+3. **Never commit secrets**, tokens, private keys, or auth dumps.
+4. **Never run destructive operations** without explicit user confirmation.
+5. **Never make broad unrelated refactors** during focused tasks.
+6. **Never fabricate outputs**, test results, or status reports.
+7. **Never disable security checks** to force completion.
+8. **Never exfiltrate** workspace or private data.
+9. **Never stop mid-task** for avoidable steps you can execute yourself.
+10. **Never ignore lint/test failures** silently — fix or explain them.
+
+---
+
+## 5. Golden Examples
+
+### Example 1: Fix a Bug in server_v21.js
+
+```
+1. Read the error/report and locate the file:
+   workspace/agent_marketplace_poc/v2/server_v21.js
+
+2. Read the file, identify the bug in the relevant function.
+
+3. Apply a minimal fix, preserving existing patterns (SSE, event-driven).
+
+4. Run the server:
+   exec(command="node workspace/agent_marketplace_poc/v2/server_v21.js")
+
+5. Test the endpoint:
+   web_fetch(url="http://localhost:3000/health", method="GET")
+
+6. Run tests if available:
+   exec(command="npm test")
+
+7. Report with evidence: "Fixed null check in /api/marketplace handler.
+   Server starts clean, health endpoint returns 200, tests pass."
+```
+
+### Example 2: Research and Report
+
+```
+1. Gather information:
+   web_search(query="latest Node.js 22 security advisories 2026")
+   web_fetch(url="https://nodejs.org/en/blog/vulnerability")
+
+2. If web_search fails (missing Brave key):
+   browser(action="navigate", url="https://nodejs.org/en/blog/vulnerability")
+   browser(action="screenshot")
+
+3. Synthesize findings into structured markdown.
+
+4. Write to workspace:
+   Write findings to workspace/research/nodejs-security-2026.md
+
+5. Notify user:
+   message(action="send", channel="telegram", text="Security research complete. 3 advisories found. Report saved.")
+```
+
+### Example 3: Spawn Sub-Agents for Parallel Work
+
+```
+1. Identify parallelizable subtasks:
+   - Task A: Audit backend API endpoints
+   - Task B: Analyze frontend bundle size
+   - Task C: Review infrastructure costs
+
+2. Spawn each:
+   sessions_spawn(prompt="Audit all API endpoints in workspace/agent_marketplace_poc/v2/server_v21.js. List each route, method, and any missing auth checks.", model="openai/gpt-4o")
+   sessions_spawn(prompt="Analyze frontend bundle size. Run npm run build and report total size, largest chunks.", model="openai/gpt-4o")
+   sessions_spawn(prompt="Review cloud infrastructure costs from workspace/investment_strategy/. Summarize monthly spend.", model="openai/gpt-4o")
+
+3. Wait, then aggregate:
+   subagents(action="list")  # Check status periodically (not in tight loop)
+
+4. Integrate results, verify key claims, write consolidated report.
+```
+
+### Example 4: Set Up a Scheduled Health Check
+
+```
+1. Define the cron job:
+   cron(action="set", expression="0 */6 * * *", task="Check gateway health with `openclaw gateway status`. If unhealthy, attempt `openclaw gateway restart` and notify user via Telegram.")
+
+2. Verify it was created:
+   cron(action="list")
+
+3. Report: "Health check scheduled every 6 hours. Will auto-restart gateway and notify on failure."
+```
+
+### Example 5: Browser-Based Data Extraction
+
+```
+1. Navigate to target:
+   browser(action="navigate", url="https://example.com/data-page")
+
+2. Wait for dynamic content:
+   browser(action="wait", selector=".data-table", timeout=10000)
+
+3. Extract data:
+   browser(action="evaluate", script="document.querySelectorAll('.data-row').forEach(...)")
+
+4. Screenshot for evidence:
+   browser(action="screenshot")
+
+5. Save results to workspace file and report.
+```
+
+---
+
+## 6. Legacy / Avoid
+
+| Anti-Pattern | Why | Instead |
+|-------------|-----|---------|
+| Speculative trading configs | Fail robustness gates | Use validated strategy templates |
+| One-off scripts with no tests | Unmaintainable, unreproducible | Always add at least a smoke test |
+| Hardcoded file paths from other machines | Break in container | Use workspace-relative paths |
+| Hardcoded credentials in source | Security violation | Use environment variables or auth-profiles.json |
+| Stale OpenClaw config patterns | Schema has evolved | Fetch current schema, patch only valid keys |
+| `source venv/bin/activate` in exec | Shell activation fails in non-interactive exec | Use `/home/node/venv/bin/python` or `/home/node/venv/bin/pip` directly |
+| Polling sub-agents in tight loops | Wastes resources, may cause rate limits | Check on-demand with `subagents`, use sensible intervals |
+| Overly broad `apt-get install` | Bloats container, may conflict | Install only what is needed |
+| Copying old marketplace v1 patterns | Deprecated architecture | Reference v2 patterns in `agent_marketplace_poc/v2/` |
+| Using `web_search` without checking key | Fails silently | Check for `BRAVE_API_KEY`, fallback to `web_fetch`/`browser` |
+
+---
+
+## 7. Testing & Verification
+
+### Verification Checklist
+
+Before marking ANY task as complete:
+
+- [ ] **Changed code was executed** at least once with real inputs.
+- [ ] **Test suite ran** (if one exists) and all tests pass.
+- [ ] **Happy path verified** with expected output.
+- [ ] **At least one error path** tested (invalid input, missing data, network failure).
+- [ ] **No lint errors** introduced (`npm run lint` / `flake8`).
+- [ ] **No secrets** committed or exposed in output.
+- [ ] **Evidence documented** — include actual command output in your report.
+
+### Test Commands by Project Type
+
+```bash
+# Node.js projects
+npm test                    # Run full test suite
+npm run test:unit           # Unit tests only (if configured)
+npm run test:integration    # Integration tests (if configured)
+npx jest --coverage         # With coverage report
+
+# Python projects
+pytest -q                   # Quick run
+pytest -v --tb=short        # Verbose with short tracebacks
+pytest --cov=.              # With coverage
+python3 -m unittest discover  # Standard unittest
+
+# API verification
+web_fetch(url="http://localhost:<port>/health")           # Health check
+web_fetch(url="http://localhost:<port>/api/<endpoint>")   # Endpoint test
+```
+
+### Regression Testing
+
+When fixing a bug:
+1. Write a test that reproduces the bug (should fail before fix).
+2. Apply the fix.
+3. Confirm the test now passes.
+4. Run the full suite to check for regressions.
+
+---
+
+## 8. PR / Commit Workflow
+
+### Workflow Steps
+
+```
+[1] Understand  -> Read request, constraints, existing code state
+[2] Implement   -> Focused change set ONLY (no unrelated refactors)
+[3] Verify      -> Run code, run tests, fix issues, repeat
+[4] Document    -> Update docs if behavior/setup/usage changed
+[5] Stage       -> git add only relevant files (never `git add .` blindly)
+[6] Commit      -> Clear, conventional commit message
+[7] Push        -> Only when explicitly requested by user
+[8] Report      -> Concise outcome with evidence
+```
+
+### Commit Message Format
+
+```
+<type>(<scope>): <short description>
+
+<body - what and why, not how>
+
+Types: feat, fix, refactor, docs, test, chore, perf, ci
+```
+
+**Examples:**
+```
+feat(marketplace): add SSE streaming for real-time price updates
+fix(gateway): resolve race condition in config reload
+docs(agents): update AGENTS.md with new tool reference
+test(api): add integration tests for /health endpoint
+```
+
+### Definition of Done
+
+- Requested behavior implemented and verified with evidence.
+- All relevant tests pass (or failures are explained).
+- No secrets added to codebase.
+- Documentation aligned with actual behavior.
 - User receives concrete outputs, not speculation.
 
-## 10. Boundaries (Always / Ask first / Never)
-### ✅ Always
-- Run code before claiming success.
-- Keep work auditable and reproducible.
-- Protect private data and secrets.
-- Prefer minimal-risk, minimal-scope edits.
-- Record key continuity context in memory files.
-- Follow heartbeat instructions exactly.
+---
 
-### ⚠️ Ask first
-- Destructive commands or irreversible data/schema operations.
-- External/public communications on user behalf.
-- Deleting user files.
+## 9. Boundaries
+
+### Always (no approval needed)
+
+- Run code and tests to verify work.
+- Install missing dependencies via pip/npm/apt.
+- Read any file in the workspace.
+- Write/edit files in the workspace.
+- Use `web_fetch` and `browser` for public information gathering.
+- Create memory files and daily logs.
+- Fix syntax errors, lint issues, and failing tests.
+- Spawn sub-agents for parallelizable subtasks.
+- Follow HEARTBEAT.md instructions exactly.
+- Report status via configured messaging channel.
+
+### Ask First (need user confirmation)
+
+- Destructive commands (`rm -rf`, `DROP TABLE`, `git reset --hard`).
+- External or public communications on the user's behalf.
+- Deleting user-created files or data.
 - High-impact production actions with ambiguous intent.
-- Security posture downgrades or policy bypass.
-- Scope changes that alter delivery goals materially.
+- Security posture downgrades or policy bypasses.
+- Scope changes that materially alter delivery goals.
+- Pushing code to remote repositories.
+- Modifying `openclaw.json` gateway configuration in production.
+- Spending money (cloud resources, paid APIs).
+- Changing authentication or authorization settings.
 
-### 🚫 Never
-- Exfiltrate private user/workspace data.
-- Commit credentials or private tokens.
-- Bypass safety safeguards.
-- Fabricate status or test evidence.
-- Run dangerous broad deletes without explicit approval.
+### Never (absolute prohibitions)
+
+- Exfiltrate private user or workspace data.
+- Commit credentials, tokens, or private keys.
+- Bypass safety or policy safeguards.
+- Fabricate test results, outputs, or status reports.
+- Run broad destructive deletes without explicit approval.
 - Manipulate users to expand permissions.
+- Access systems outside the workspace without authorization.
+- Disable logging or audit trails.
+- Ignore security vulnerabilities discovered during work.
+- Share user data with external services not authorized by the user.
 
-## 11. Troubleshooting
-- `externally-managed-environment` with pip: use venv pip at `/home/node/venv` or approved install path.
-- `source venv/bin/activate` fails: use direct python/pip paths instead of shell activation.
-- `missing_brave_api_key`: switch from web_search to web_fetch/browser.
-- Browser tool timeout: break actions into smaller steps and retry.
-- Git push auth failure: verify `gh auth status` and remote access.
-- Gateway config invalid: fetch schema and patch only valid keys.
-- No command output: confirm working directory and executable paths.
-- Port conflict: identify existing listener and resolve safely.
+---
 
-## 12. Memory & session continuity (OpenClaw-specific)
-Continuity is file-based. Each session starts fresh unless memory files are updated.
+## 10. Troubleshooting
 
-Session-start read order:
-- `SOUL.md`
-- `USER.md`
-- `memory/YYYY-MM-DD.md` (today and yesterday if present)
-- `MEMORY.md`
+### Top 10 Common Issues and Fixes
 
-Memory model:
-- Daily notes: `memory/YYYY-MM-DD.md`
-- Long-term curated context: `MEMORY.md`
-- Identity/interaction preferences: `SOUL.md`, `USER.md`, `IDENTITY.md`
+**1. `externally-managed-environment` with pip**
+```bash
+# WRONG
+pip install requests
 
-Heartbeat instructions:
-- Read `HEARTBEAT.md` and follow it exactly.
-- If no attention needed on heartbeat poll, respond exactly `HEARTBEAT_OK`.
-- Do not infer old tasks not present in current `HEARTBEAT.md`.
+# FIX: Use venv pip
+/home/node/venv/bin/pip install requests
+# Or prefix with python -m
+/home/node/venv/bin/python -m pip install requests
+```
 
-Telegram and messaging handling:
-- Default replies route to current session channel.
-- Use `message` for proactive sends/channel actions only when needed.
-- If replying via `message(action=send)`, output only `NO_REPLY` in assistant reply to avoid duplication.
-- Respect channel capability limitations (e.g., WhatsApp inline buttons).
+**2. `source venv/bin/activate` fails in exec**
+```bash
+# WRONG
+exec(command="source /home/node/venv/bin/activate && python script.py")
 
-Sub-agent spawning guide:
-- Use `sessions_spawn` for complex, parallelizable, or long-running work.
-- Give clear bounded prompts with acceptance criteria.
-- Avoid status polling loops; check on-demand with `subagents`.
-- Integrate and verify spawned results before final report.
+# FIX: Use full paths directly
+exec(command="/home/node/venv/bin/python script.py")
+```
 
-## 13. How to improve this file
-Update this file whenever tooling, commands, folder layout, recurring failures, or team conventions change. Keep it command-oriented, concrete, and grounded in real workspace paths. Add proven examples when new patterns are validated; remove stale guidance immediately so this remains a dependable daily operations manual.
-- Operational checklist line 247: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 248: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 249: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 250: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 251: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 252: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 253: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 254: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 255: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 256: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 257: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 258: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 259: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 260: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 261: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 262: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 263: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 264: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 265: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 266: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 267: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 268: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 269: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 270: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 271: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 272: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 273: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 274: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 275: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 276: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 277: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 278: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 279: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 280: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 281: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 282: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 283: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 284: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 285: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 286: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 287: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 288: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 289: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 290: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 291: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 292: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 293: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 294: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 295: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 296: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 297: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 298: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 299: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 300: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 301: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 302: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 303: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 304: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 305: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 306: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 307: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 308: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 309: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 310: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 311: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 312: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 313: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 314: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 315: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 316: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 317: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 318: verify scope, execution evidence, safety, and user alignment before closure.
-- Operational checklist line 319: verify scope, execution evidence, safety, and user alignment before closure.
+**3. `missing_brave_api_key` for web_search**
+```
+# Cause: BRAVE_API_KEY not configured in environment
+
+# FIX: Switch to web_fetch or browser
+web_fetch(url="https://www.google.com/search?q=<query>")
+# Or use browser for JS-heavy sites
+browser(action="navigate", url="https://www.google.com/search?q=<query>")
+```
+
+**4. Browser tool timeout**
+```
+# Cause: Page takes too long to load, or waiting for wrong selector
+
+# FIX: Break into smaller steps
+browser(action="navigate", url="<url>")
+browser(action="wait", selector="body", timeout=5000)  # Wait for body first
+browser(action="wait", selector=".target", timeout=10000)  # Then specific element
+# If still failing, fall back to web_fetch for static content
+```
+
+**5. Git push authentication failure**
+```bash
+# Diagnose
+gh auth status
+
+# FIX: Check remote and token
+git remote -v                    # Verify remote URL
+gh auth login --with-token       # Re-authenticate if needed
+# If no fix available, report the auth issue to the user
+```
+
+**6. Gateway config validation error**
+```bash
+# Diagnose: fetch current schema
+openclaw gateway --help
+cat /home/node/.openclaw/openclaw.json
+
+# FIX: Patch only valid keys, do not overwrite the entire config
+# Use minimal JSON patch, not full replacement
+```
+
+**7. Port already in use**
+```bash
+# Diagnose
+lsof -i :<port>
+# or
+ss -tlnp | grep <port>
+
+# FIX: Kill the conflicting process or use a different port
+kill <pid>
+# Or switch to an available port (3001, 3002, etc.)
+```
+
+**8. No output from exec command**
+```bash
+# Cause: Wrong working directory, missing executable, or silent failure
+
+# FIX: Always use absolute paths
+exec(command="ls -la /home/node/.openclaw/workspace/")
+exec(command="which node && node --version")
+# Check stderr: some tools output to stderr, not stdout
+```
+
+**9. Sub-agent returns incomplete results**
+```
+# Cause: Prompt too vague or task too large for single context
+
+# FIX: Break into smaller, bounded prompts with clear acceptance criteria
+sessions_spawn(prompt="ONLY do X. Return result as JSON with keys: {status, data, errors}. Do NOT proceed to Y.")
+# Verify results before integrating
+```
+
+**10. Intermittent flaky test**
+```bash
+# Diagnose: Run test in isolation
+npm test -- --testNamePattern="<test name>"
+pytest -k "<test name>" -v
+
+# FIX:
+# - Check for timing-dependent assertions -> add retries or longer timeouts
+# - Check for shared state -> isolate test fixtures
+# - Check for network dependencies -> mock external calls
+# - Run full suite after fix to confirm stability
+```
+
+---
+
+## 11. Self-Healing Procedures
+
+When something fails, follow this decision tree before asking the user:
+
+```
+Error detected
+  |
+  +-- Missing dependency?
+  |     -> Install it: pip/npm/apt-get
+  |     -> Rerun the command
+  |
+  +-- Syntax error in code?
+  |     -> Read the error, fix the code
+  |     -> Rerun the command
+  |
+  +-- Runtime exception?
+  |     -> Capture full stack trace
+  |     -> Identify root cause
+  |     -> Patch and rerun tests
+  |
+  +-- API rate limit (429)?
+  |     -> Wait 30-60 seconds
+  |     -> Retry once
+  |     -> If still failing, switch to fallback model or tool
+  |
+  +-- Browser timeout?
+  |     -> Retry with smaller steps
+  |     -> Fall back to web_fetch for static content
+  |
+  +-- Git auth error?
+  |     -> Check gh auth status
+  |     -> Report to user if credentials are missing
+  |
+  +-- Config validation error?
+  |     -> Fetch current schema
+  |     -> Patch only valid keys
+  |
+  +-- Port conflict?
+  |     -> Identify listener: lsof -i :<port>
+  |     -> Kill or switch port
+  |
+  +-- Unknown error?
+  |     -> Read error message carefully
+  |     -> Search web for solution: web_search or web_fetch
+  |     -> Apply fix and verify
+  |     -> If still stuck after 3 attempts: report to user with full context
+```
+
+### Loop Detection and Circuit Breakers
+
+- **Max retry counter**: Do not retry the same failing command more than **3 times**.
+- **Escalation**: After 3 failures, change approach or ask the user.
+- **Iteration cap**: Loops (polling, retry, build-fix-build) must not exceed **10 iterations** without producing measurable progress.
+- **Time cap**: If a single subtask takes more than **15 minutes** without progress, pause and reassess.
+- **Sub-agent cap**: Do not spawn more than **5 sub-agents** simultaneously without good reason.
+
+---
+
+## 12. Memory & Session Continuity
+
+### Session Start Read Order
+
+Every new session, read files in this exact order:
+1. `SOUL.md` — personality and interaction style
+2. `USER.md` — user preferences and context
+3. `memory/YYYY-MM-DD.md` — today's log (and yesterday's if today's is empty)
+4. `MEMORY.md` — long-term curated context
+5. `HEARTBEAT.md` — current task instructions
+
+### Daily Logs
+
+Write to `workspace/memory/YYYY-MM-DD.md` at session end or after significant events:
+
+```markdown
+# 2026-02-21
+
+## Tasks Completed
+- Fixed SSE streaming bug in marketplace v2
+- Updated AGENTS.md with new tool reference
+
+## Decisions Made
+- Chose web_fetch over browser for API data (faster, more reliable)
+
+## Open Items
+- Frontend bundle size optimization still pending
+- User requested cost analysis — spawn sub-agent tomorrow
+
+## Errors Encountered
+- Gateway config validation failed on `rateLimit` key (removed, not in schema)
+```
+
+### Long-Term Memory (MEMORY.md)
+
+Update `workspace/MEMORY.md` for cross-session context that matters:
+- User preferences that persist (e.g., "user prefers TypeScript over JavaScript")
+- Project decisions (e.g., "marketplace v2 is the active version, v1 is deprecated")
+- Known issues (e.g., "Brave API key is not configured — always use web_fetch fallback")
+- Environment facts that change (e.g., "Node upgraded to v22.22.0 on 2026-02-15")
+
+### Heartbeat Protocol
+
+- Read `HEARTBEAT.md` on every heartbeat poll.
+- If no attention is needed, respond exactly: `HEARTBEAT_OK`
+- Do NOT infer tasks from previous sessions — only act on what is in the current `HEARTBEAT.md`.
+
+---
+
+## 13. Communication Protocol
+
+### Telegram Messaging
+
+- Default replies route to the current session channel automatically.
+- Use `message(action="send")` only for proactive notifications or channel-specific actions.
+- When sending via `message(action="send")`, output only `NO_REPLY` in the assistant response to avoid duplication.
+- Respect channel limitations (e.g., WhatsApp does not support inline buttons).
+
+### Reporting Format
+
+When reporting results back to the user, follow this structure:
+
+```
+**Task**: [What was requested]
+**Status**: [Complete / Partial / Blocked]
+**What I Did**: [Concrete actions taken]
+**Evidence**: [Command output, test results, screenshots]
+**Next Steps**: [If any remaining work, or "None"]
+```
+
+### Sub-Agent Communication
+
+- Give sub-agents **bounded prompts** with clear acceptance criteria.
+- Include the specific file paths and expected output format.
+- Check results with `subagents(action="list")` — do not poll in tight loops.
+- Always **verify** sub-agent results before incorporating into final output.
+
+---
+
+## 14. How to Improve This File
+
+This file is the single source of truth for agent operations. Keep it current:
+
+- **Add** new tool syntax when tools are added or changed.
+- **Update** the project map when directories or entrypoints change.
+- **Record** new troubleshooting entries when novel errors are solved.
+- **Remove** stale guidance immediately — outdated instructions are worse than none.
+- **Test** examples periodically to ensure they still work.
+- **Version** significant changes in a commit: `docs(agents): update AGENTS.md with <change>`.
+
+### What Triggers an Update
+
+- New tool or capability added to OpenClaw.
+- New project or directory created in workspace.
+- Recurring failure pattern not yet documented.
+- Team convention change (commit format, review process, etc.).
+- OpenClaw version upgrade (check schema changes, new CLI commands).
+- User explicitly requests a change: "Update AGENTS.md with..."
+
+### Quality Bar
+
+Every section must be:
+- **Concrete**: Exact commands, file paths, syntax — no vague "consider doing X".
+- **Current**: Matches the actual state of the workspace and tooling.
+- **Tested**: Examples should work if executed verbatim.
+- **Minimal**: No filler, no duplication, no padding. Every line earns its place.
