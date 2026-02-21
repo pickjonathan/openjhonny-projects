@@ -1,0 +1,104 @@
+# OpenClaw Docker Compose — Configuration-First Setup
+#
+# Agent instruction files (AGENTS.md, *-AGENTS.md) live in ./workspace/ alongside
+# this file and are mounted into the container on init. Edit them in the repo,
+# then restart the container — no rebuild needed.
+#
+# Usage:
+#   cp .env.template .env        # fill in your API keys
+#   docker compose up -d         # start the gateway
+#   docker compose logs -f       # watch logs
+
+services:
+  openclaw-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_INSTALL_BROWSER: ${OPENCLAW_INSTALL_BROWSER:-1}
+    image: openclaw:latest
+    container_name: openclaw-gateway
+    restart: unless-stopped
+
+    # Environment variables — set secrets in .env (never commit .env)
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+
+      # Gateway configuration
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-loopback}
+
+      # AI provider keys (set at least one)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+
+      # Optional: Claude AI session keys
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+
+      # Channel tokens
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
+
+      # Set to "true" to regenerate auth profiles on startup
+      FORCE_REGENERATE_AUTH: ${FORCE_REGENERATE_AUTH:-false}
+
+    volumes:
+      # Persistent config & state (auth tokens, paired devices, session history)
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+
+      # Agent instruction files — sourced from this repo (configuration-first).
+      # Edit workspace/AGENTS.md and workspace/*-AGENTS.md in the repo,
+      # then restart the container. Your changes take effect immediately.
+      - ./workspace:/home/node/.openclaw/workspace
+
+      # Optional: OpenAI Codex CLI credentials (read-only, for Codex model auth)
+      - ~/.codex:/home/node/.codex:ro
+
+    ports:
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
+
+    init: true
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # On-demand CLI access: docker compose run --rm openclaw-cli
+  openclaw-cli:
+    image: openclaw:latest
+    container_name: openclaw-cli
+
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      BROWSER: echo
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+      - ./workspace:/home/node/.openclaw/workspace
+
+    stdin_open: true
+    tty: true
+    init: true
+
+    profiles:
+      - cli
+
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["node", "dist/index.js"]

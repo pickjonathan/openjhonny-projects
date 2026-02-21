@@ -1,0 +1,17 @@
+# Runtime files created by the agent — do not commit
+memory/
+MEMORY.md
+SOUL.md
+USER.md
+IDENTITY.md
+TOOLS.md
+HEARTBEAT.md
+BOOTSTRAP.md
+*.py
+*.js
+*.json
+!.gitignore
+node_modules/
+venv/
+__pycache__/
+*.pyc
