@@ -188,9 +188,27 @@ for (var i = 0; i < incoming.length; i++) {
 }
 let main = list.find(function(a) { return a.id === 'main'; });
 if (!main) { main = { id: 'main' }; list.push(main); changed = true; }
+
+// --- main.subagents.allowAgents: explicit list of all specialist agents ---
+const specialistIds = [
+  'orchestrator', 'infra-architect', 'cicd-architect', 'cloud-architect',
+  'backend-dev', 'frontend-dev', 'product-manager',
+  'seo-growth', 'qa-reliability', 'security-compliance'
+];
 main.subagents = main.subagents || {};
-if (!main.subagents.allowAgents || main.subagents.allowAgents[0] !== '*') {
-  main.subagents.allowAgents = ['*']; changed = true;
+const currentAllow = main.subagents.allowAgents || [];
+const missingAgents = specialistIds.filter(function(id) { return !currentAllow.includes(id); });
+if (missingAgents.length > 0) {
+  main.subagents.allowAgents = specialistIds;
+  changed = true;
+}
+
+// --- main.tools.alsoAllow: ensure sessions_spawn is included ---
+main.tools = main.tools || {};
+main.tools.alsoAllow = main.tools.alsoAllow || [];
+if (!main.tools.alsoAllow.includes('sessions_spawn')) {
+  main.tools.alsoAllow.push('sessions_spawn');
+  changed = true;
 }
 
 // --- commands: enable restart, bash, config ---
@@ -240,6 +258,36 @@ if [ ! -f "$EXEC_APPROVALS" ]; then
 }
 EOJSON
     echo "  ✓ exec-approvals.json created: $EXEC_APPROVALS"
+fi
+
+# Provision auth-profiles for every specialist agent defined in openclaw.json.
+# Each agent needs its own agents/<id>/agent/auth-profiles.json to be callable
+# as an independent session. We copy from main's auth-profiles (same credentials).
+if [ -f "$AUTH_PROFILES" ] && [ -f "$CONFIG_FILE" ] && command -v node >/dev/null 2>&1; then
+    node -e "
+const fs = require('fs');
+const path = require('path');
+const cfg = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+const mainAuth = '$AUTH_PROFILES';
+const agentsBase = '$OPENCLAW_DIR/agents';
+const skip = new Set(['main', 'openai-whisper-api']);
+let provisioned = 0;
+for (const agent of (cfg.agents && cfg.agents.list) || []) {
+  if (skip.has(agent.id)) continue;
+  const dir = path.join(agentsBase, agent.id, 'agent');
+  const dest = path.join(dir, 'auth-profiles.json');
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.copyFileSync(mainAuth, dest);
+    provisioned++;
+  }
+}
+if (provisioned > 0) {
+  console.log('  ✓ Provisioned auth-profiles for ' + provisioned + ' specialist agent(s)');
+} else {
+  console.log('  ✓ All specialist agent auth-profiles already exist');
+}
+" || echo "  ⚠️  Specialist agent auth provisioning failed (non-fatal)"
 fi
 
 # Ensure all paired devices have operator.write scope so sub-agent spawning works
