@@ -211,6 +211,24 @@ if (!main.tools.alsoAllow.includes('sessions_spawn')) {
   changed = true;
 }
 
+// --- orchestrator: needs sessions_spawn + allowAgents so Telegram DM users can spawn specialists ---
+// The Telegram binding routes DMs to orchestrator, so orchestrator must have the same spawn perms.
+const subSpecialistIds = specialistIds.filter(function(id) { return id !== 'orchestrator'; });
+let orch = list.find(function(a) { return a.id === 'orchestrator'; });
+if (!orch) { orch = { id: 'orchestrator' }; list.push(orch); changed = true; }
+orch.tools = orch.tools || {};
+orch.tools.alsoAllow = orch.tools.alsoAllow || [];
+['sessions_spawn', 'message', 'web_search', 'web_fetch', 'browser'].forEach(function(t) {
+  if (!orch.tools.alsoAllow.includes(t)) { orch.tools.alsoAllow.push(t); changed = true; }
+});
+orch.subagents = orch.subagents || {};
+const orchCurrentAllow = orch.subagents.allowAgents || [];
+const orchMissing = subSpecialistIds.filter(function(id) { return !orchCurrentAllow.includes(id); });
+if (orchMissing.length > 0) {
+  orch.subagents.allowAgents = subSpecialistIds;
+  changed = true;
+}
+
 // --- commands: enable restart, bash, config ---
 cfg.commands = cfg.commands || {};
 const cmdFixes = { restart: true, bash: true, config: true };
