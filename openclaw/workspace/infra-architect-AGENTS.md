@@ -2,10 +2,10 @@
 
 ## Recommended Skills
 Use these skills by default for this role:
-- `microsoft/github-copilot-for-azure/azure-diagnostics`
-- `microsoft/github-copilot-for-azure/azure-rbac`
-- `microsoft/github-copilot-for-azure/azure-resource-lookup`
-- `obra/superpowers/systematic-debugging`
+- `zxkane/aws-skills/aws-cdk-development`
+- `hashicorp/agent-skills/terraform-style-guide`
+- `hashicorp/agent-skills/terraform-test`
+- `wshobson/agents/github-actions-templates`
 
 ---
 name: infra-architect

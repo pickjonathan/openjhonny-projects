@@ -2,9 +2,9 @@
 
 ## Recommended Skills
 Use these skills by default for this role:
-- `microsoft/github-copilot-for-azure/azure-compliance`
-- `microsoft/github-copilot-for-azure/azure-rbac`
+- `sickn33/antigravity-awesome-skills/aws-penetration-testing`
 - `obra/superpowers/systematic-debugging`
+- `hashicorp/agent-skills/terraform-style-guide`
 
 ## 1. Quick Commands
 

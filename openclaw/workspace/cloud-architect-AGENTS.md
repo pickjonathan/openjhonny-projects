@@ -2,10 +2,10 @@
 
 ## Recommended Skills
 Use these skills by default for this role:
-- `microsoft/github-copilot-for-azure/azure-cost-optimization`
-- `microsoft/github-copilot-for-azure/azure-observability`
-- `microsoft/github-copilot-for-azure/azure-validate`
-- `microsoft/github-copilot-for-azure/azure-resource-visualizer`
+- `alirezarezvani/claude-skills/aws-solution-architect`
+- `sickn33/antigravity-awesome-skills/aws-serverless`
+- `zxkane/aws-skills/aws-cdk-development`
+- `hashicorp/agent-skills/terraform-style-guide`
 
 ## 1. Quick Commands
 

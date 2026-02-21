@@ -50,18 +50,18 @@ Recommended skills:
 **Needs:** cloud cost governance, observability, architecture validation.
 
 Recommended skills:
-- `microsoft/github-copilot-for-azure/azure-cost-optimization`
-- `microsoft/github-copilot-for-azure/azure-observability`
-- `microsoft/github-copilot-for-azure/azure-validate`
-- `microsoft/github-copilot-for-azure/azure-resource-visualizer`
+- `alirezarezvani/claude-skills/aws-solution-architect`
+- `sickn33/antigravity-awesome-skills/aws-serverless`
+- `zxkane/aws-skills/aws-cdk-development`
+- `hashicorp/agent-skills/terraform-style-guide`
 
 ## 6) infra-architect
 **Needs:** platform reliability, diagnostics, IAM boundaries, ops maturity.
 
 Recommended skills:
-- `microsoft/github-copilot-for-azure/azure-diagnostics`
-- `microsoft/github-copilot-for-azure/azure-rbac`
-- `microsoft/github-copilot-for-azure/azure-resource-lookup`
+- `zxkane/aws-skills/aws-cdk-development`
+- `hashicorp/agent-skills/terraform-style-guide`
+- `hashicorp/agent-skills/terraform-test`
 - `obra/superpowers/systematic-debugging`
 
 ## 7) product-manager
@@ -84,8 +84,8 @@ Recommended skills:
 **Needs:** security baseline enforcement, compliance mapping, access controls.
 
 Recommended skills:
-- `microsoft/github-copilot-for-azure/azure-compliance`
-- `microsoft/github-copilot-for-azure/azure-rbac`
+- `sickn33/antigravity-awesome-skills/aws-penetration-testing`
+- `hashicorp/agent-skills/terraform-style-guide`
 - `obra/superpowers/systematic-debugging`
 
 ## 10) seo-growth
@@ -102,7 +102,7 @@ Recommended skills:
 
 ## Source checks used
 - `https://skills.sh/` leaderboard and catalog
-- sampled pages for: `seo-audit`, `content-strategy`, `systematic-debugging`, `test-driven-development`, `writing-plans`, `vercel-react-best-practices`, `azure-cost-optimization`
+- sampled pages for: `seo-audit`, `content-strategy`, `systematic-debugging`, `test-driven-development`, `writing-plans`, `vercel-react-best-practices`, `aws-solution-architect`
 
 Notes:
 - Some skills.sh routes 404 on fetch; selected entries are still taken from indexed leaderboard + available pages.
