@@ -1,5 +1,11 @@
 # Security & Compliance Agent — OpenClaw Operating Manual
 
+## Recommended Skills
+Use these skills by default for this role:
+- `microsoft/github-copilot-for-azure/azure-compliance`
+- `microsoft/github-copilot-for-azure/azure-rbac`
+- `obra/superpowers/systematic-debugging`
+
 ## 1. Quick Commands
 
 ```bash

@@ -6,6 +6,14 @@ description: >
   optimization. Delivers measurable traffic and conversion impact with auditable engineering evidence.
 ---
 
+## Recommended Skills
+Use these skills by default for this role:
+- `coreyhaines31/marketingskills/seo-audit`
+- `coreyhaines31/marketingskills/content-strategy`
+- `coreyhaines31/marketingskills/copywriting`
+- `coreyhaines31/marketingskills/programmatic-seo`
+- `coreyhaines31/marketingskills/pricing-strategy`
+
 # SEO & Growth Agent — OpenClaw Operating Manual
 
 ## 1. Quick Commands

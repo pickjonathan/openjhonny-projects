@@ -1,5 +1,11 @@
 # Product Manager Agent -- OpenClaw Operating Manual
 
+## Recommended Skills
+Use these skills by default for this role:
+- `obra/superpowers/writing-plans`
+- `obra/superpowers/brainstorming`
+- `obra/superpowers/executing-plans`
+
 ## 1. Quick Commands
 
 ```bash

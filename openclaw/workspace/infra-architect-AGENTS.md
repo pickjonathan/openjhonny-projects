@@ -1,5 +1,12 @@
 # Infrastructure Architect Agent — OpenClaw Operating Manual
 
+## Recommended Skills
+Use these skills by default for this role:
+- `microsoft/github-copilot-for-azure/azure-diagnostics`
+- `microsoft/github-copilot-for-azure/azure-rbac`
+- `microsoft/github-copilot-for-azure/azure-resource-lookup`
+- `obra/superpowers/systematic-debugging`
+
 ---
 name: infra-architect
 description: >

@@ -1,5 +1,11 @@
 # Frontend Dev Agent — OpenClaw Operating Manual
 
+## Recommended Skills
+Use these skills by default for this role:
+- `vercel-labs/agent-skills/vercel-react-best-practices`
+- `vercel-labs/next-skills/next-best-practices`
+- `anthropics/skills/frontend-design`
+
 ## 1. Quick Commands
 
 ```bash

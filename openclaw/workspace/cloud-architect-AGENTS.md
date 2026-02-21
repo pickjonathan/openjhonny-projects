@@ -1,5 +1,12 @@
 # Cloud Architect Agent — OpenClaw Operating Manual
 
+## Recommended Skills
+Use these skills by default for this role:
+- `microsoft/github-copilot-for-azure/azure-cost-optimization`
+- `microsoft/github-copilot-for-azure/azure-observability`
+- `microsoft/github-copilot-for-azure/azure-validate`
+- `microsoft/github-copilot-for-azure/azure-resource-visualizer`
+
 ## 1. Quick Commands
 
 ```bash
